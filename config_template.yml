@@ -1,0 +1,11 @@
+smartmeter:
+  device: '/dev/ttyUSB0'
+  # Test
+  # device: 'test/obis-test-data-00.dat'
+
+mqtt:
+  host: 'localhost'
+  port: 1883
+  username: 'user'
+  password: 'password'
+  topic_prefix: 'sm-test'
