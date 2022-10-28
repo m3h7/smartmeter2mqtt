@@ -1,0 +1,8 @@
+version: '3'
+services:
+  smartmeter2mqtt:
+    image: ghcr.io/m3h7/smartmeter2mqtt:latest
+    build:
+      context: '.'
+    volumes:
+      - "./config.yml:/config/config.yml:ro"

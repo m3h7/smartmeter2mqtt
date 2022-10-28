@@ -1,5 +1,5 @@
 # Smartmeter to MQTT
-Reads from smartmeter end send obis messages to MQTT.
+Reads from smartmeter and sends obis messages to MQTT.
 
 ## Local development
 
