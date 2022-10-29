@@ -65,7 +65,7 @@ class Smartmeter2Mqtt:
 
             (key, value, unit) = msg.group(1, 2, 3)
             value = self.format_value(value)
-            topic = self._mqtt_topic_prefix + self.format_key(key)
+            topic = self._mqtt_topic_prefix + self.format_key(key) + '/value'
 
             logging.debug(f'Topic: {topic} Value: {value} Unit: {unit}')
 
