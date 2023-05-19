@@ -21,7 +21,8 @@ schema = Schema({
         Optional('cafile'): os.path.exists,
         Optional('certfile'): os.path.exists,
         Optional('keyfile'): os.path.exists,
-        Optional('topic_prefix'): And(str, len)
+        Optional('topic_prefix'): And(str, len),
+        Optional('send_message_json'): bool
     },
     'smartmeter': {
         'device': And(str, len)

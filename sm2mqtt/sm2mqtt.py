@@ -1,5 +1,5 @@
 import logging
-import os
+import json
 import re
 import paho.mqtt.client
 
@@ -13,7 +13,8 @@ class Smartmeter2Mqtt:
         self._mqtt = paho.mqtt.client.Client()
 
         if config['mqtt'].get('username', None):
-            self._mqtt.username_pw_set(config['mqtt']['username'], config['mqtt'].get('password', None))
+            self._mqtt.username_pw_set(
+                config['mqtt']['username'], config['mqtt'].get('password', None))
 
         if config['mqtt'].get('cafile', None):
             self._mqtt.tls_set(config['mqtt']['cafile'],
@@ -24,7 +25,10 @@ class Smartmeter2Mqtt:
         self._mqtt.on_disconnect = self._on_mqtt_disconnect
         self._mqtt.on_publish = self._on_mqtt_publish
 
-        self._mqtt_topic_prefix = f"smartmeter/{config['mqtt'].get('topic_prefix', '0')}/"
+        self._mqtt_topic_prefix = f"smartmeter/{config['mqtt'].get('topic_prefix', '0')}"
+        self._send_message_json = config['mqtt'].get(
+            'send_message_json', False)
+        self._message = {}
 
     def _on_mqtt_connect(self, client, userdata, flags, rc):
         logging.info('Connected to MQTT broker with code %s', rc)
@@ -36,7 +40,8 @@ class Smartmeter2Mqtt:
                paho.mqtt.client.CONNACK_REFUSED_NOT_AUTHORIZED: 'not authorised'}
 
         if rc != paho.mqtt.client.CONNACK_ACCEPTED:
-            logging.error('mqtt: Connection refused from reason: %s', lut.get(rc, 'unknown code'))
+            logging.error('mqtt: Connection refused from reason: %s',
+                          lut.get(rc, 'unknown code'))
 
     def _on_mqtt_disconnect(self, client, userdata, rc):
         logging.info('mqtt: Disconnect from MQTT broker with code %s', rc)
@@ -47,7 +52,8 @@ class Smartmeter2Mqtt:
     def run(self):
         logging.info("Run it")
 
-        self._mqtt.connect(self._config['mqtt']['host'], self._config['mqtt']['port'], keepalive=10)
+        self._mqtt.connect(
+            self._config['mqtt']['host'], self._config['mqtt']['port'], keepalive=10)
         self._mqtt.loop_start()
 
         while True:
@@ -57,6 +63,15 @@ class Smartmeter2Mqtt:
 
             logging.debug(line)
 
+            # End of message
+            if re.search(r'^!$', line) and self._send_message_json:
+                topic = f'{self._mqtt_topic_prefix}/message'
+                value = json.dumps(self._message)
+                logging.debug(f'Topic: {topic} Value: {value}')
+                self._mqtt.publish(topic, value)
+                self._message = {}
+                continue
+
             # 1-0:1.8.0*255(008761.7115*kWh)
             msg = re.search(r'(.*)\((.*)\*(.*)\)', line)
             if not msg:
@@ -65,7 +80,9 @@ class Smartmeter2Mqtt:
 
             (key, value, unit) = msg.group(1, 2, 3)
             value = self.format_value(value)
-            topic = self._mqtt_topic_prefix + self.format_key(key) + '/value'
+            key = self.format_key(key)
+            topic = f'{self._mqtt_topic_prefix}/{key}/value'
+            self._message[key] = value
 
             logging.debug(f'Topic: {topic} Value: {value} Unit: {unit}')
 

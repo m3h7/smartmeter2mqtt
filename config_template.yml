@@ -1,11 +1,12 @@
 smartmeter:
-  device: '/dev/ttyUSB0'
+  device: "/dev/ttyUSB0"
   # Test
   # device: 'test/obis-test-data-00.dat'
 
 mqtt:
-  host: 'localhost'
+  host: "localhost"
   port: 1883
-  username: 'user'
-  password: 'password'
-  topic_prefix: 'sm-test'
+  username: "user"
+  password: "password"
+  topic_prefix: "sm-test"
+  send_message_json: true # Send whole message as json
